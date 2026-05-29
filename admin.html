@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Өтініштер — Админ</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { padding: 32px 0; }
+    .admin-wrap { width: min(1100px, calc(100% - 40px)); margin: 0 auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    th { background: #eaf3ff; }
+    .toolbar { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <p class="eyebrow">Админ</p>
+    <h1 class="section-title">Базадағы өтініштер</h1>
+    <div class="toolbar">
+      <button class="btn btn-primary" id="reloadBtn" type="button">Жаңарту</button>
+      <a class="btn btn-sky" href="index.html">Сайтқа оралу</a>
+    </div>
+    <p id="status" class="section-note"></p>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Аты-жөні</th>
+            <th>Телефон</th>
+            <th>Мамандық</th>
+            <th>Уақыты</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const rowsEl = document.getElementById("rows");
+    const statusEl = document.getElementById("status");
+
+    async function loadApplications() {
+      statusEl.textContent = "Жүктелуде...";
+      try {
+        const res = await fetch("/api/applications");
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error("load failed");
+
+        rowsEl.innerHTML = data.items.map((item) => `
+          <tr>
+            <td>${item.id}</td>
+            <td>${item.full_name}</td>
+            <td>${item.phone}</td>
+            <td>${item.major || "-"}</td>
+            <td>${new Date(item.created_at).toLocaleString("kk-KZ")}</td>
+          </tr>
+        `).join("");
+
+        statusEl.textContent = `Барлығы: ${data.items.length} өтініш`;
+      } catch (error) {
+        statusEl.textContent = "Деректерді алу мүмкін болмады. Сервер іске қосылғанын тексеріңіз.";
+        rowsEl.innerHTML = "";
+      }
+    }
+
+    document.getElementById("reloadBtn").addEventListener("click", loadApplications);
+    loadApplications();
+  </script>
+</body>
+</html>
